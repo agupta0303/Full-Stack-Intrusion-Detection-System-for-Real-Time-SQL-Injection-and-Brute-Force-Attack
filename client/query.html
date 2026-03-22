@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Test</title>
+</head>
+<body>
+
+    <h2>SQL Injection Test</h2>
+
+    <input type="text" id="q" placeholder="Enter a SQL query">
+    <button onclick="send()">Send</button>
+
+    <script>
+  function send() {
+    const query = document.getElementById("q").value;
+
+    fetch("http://localhost:3000/api/attack/sql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: query })
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (data.result === "blocked") {
+            alert("Attack detected");
+        } else {
+            alert("No attack detected");
+  }
+})
+
+    .catch(err => console.error("Fetch error:", err));
+  }
+</script>
+
+
+</body>
+</html>
