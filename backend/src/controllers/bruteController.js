@@ -1,32 +1,49 @@
 const AttackLog = require("../models/AttackLog");
-const mlDetect = require("../middleware/mlDetector");
 
-let attempts = {};
+const loginAttempts = {};
+
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 60 * 1000;
 
 exports.login = async (req, res) => {
-  const ip = req.ip;
+  const ip = req.ip || req.connection.remoteAddress;
+  const { username, password } = req.body;
   const now = Date.now();
 
-  attempts[ip] = (attempts[ip] || []).filter(t => now - t < 60000);
-  attempts[ip].push(now);
+  if (!loginAttempts[ip]) {
+    loginAttempts[ip] = [];
+  }
 
-  const features = [
-    attempts[ip].length,
-    now % 60000,
-    1, 0, 1, attempts[ip].length > 4 ? 1 : 0
-  ];
+  loginAttempts[ip] = loginAttempts[ip].filter((timestamp) => now - timestamp < WINDOW_MS);
 
-  const result = await mlDetect(features);
-
-  if (result.anomaly) {
+  if (loginAttempts[ip].length >= MAX_ATTEMPTS) {
     await AttackLog.create({
-      attackType: "Brute Force (ML)",
-      ipAddress: ip,
-      confidenceScore: result.confidence,
-      actionTaken: "Blocked"
+      attackType: "Brute Force",
+      payload: `Target Username: ${username || 'unknown'}`,
+      confidenceScore: 0.99,
+      severity: "High",
+      detectedBy: "Rate Limiter Heuristic"
     });
 
-    return res.status(429).json({ message: "Brute Force Detected (ML)" });
+    return res.status(429).json({ message: "Brute Force Detected! Too many failed attempts. Please try again later." });
+  }
+
+  if (username === "admin" && password === "password123") {
+    delete loginAttempts[ip];
+    return res.status(200).json({ message: "Login successful!" });
+  }
+  loginAttempts[ip].push(now);
+
+  if (loginAttempts[ip].length >= MAX_ATTEMPTS) {
+    await AttackLog.create({
+      attackType: "Brute Force",
+      payload: `Target Username: ${username || 'unknown'}`,
+      confidenceScore: 0.95,
+      severity: "High",
+      detectedBy: "Rate Limiter Heuristic"
+    });
+
+    return res.status(429).json({ message: "Brute Force Detected! Too many failed attempts. You are now blocked for 1 minute." });
   }
 
   res.status(401).json({ message: "Invalid Credentials" });

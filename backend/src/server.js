@@ -17,6 +17,7 @@ mongoose
   .catch(err => console.error("MongoDB error:", err));
 
 app.use("/api/attack", attackRoutes);
+app.use("/api/auth", require("./routes/authRoutes"));
 
 const PORT = 3000;
 app.listen(PORT, () => {

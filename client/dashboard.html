@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intrusion Logs Dashboard</title>
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body class="dashboard-body">
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Intrusion Detection Logs</h2>
+            <div class="nav-links">
+                <a href="login.html" class="nav-btn">Login App</a>
+                <a href="query.html" class="nav-btn">SQLi App</a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Attack Type</th>
+                        <th>Target/Payload</th>
+                        <th>Confidence</th>
+                        <th>Severity</th>
+                        <th>Detected By</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody">
+                    <!-- Dynamic Rows Here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="actions-footer">
+            <button onclick="fetchLogs()" class="refresh-btn">Refresh Logs</button>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
