@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const path = require("path");
 const cors = require("cors");
 const attackRoutes = require("./routes/attackRoutes");
 
@@ -18,6 +19,14 @@ mongoose
 
 app.use("/api/attack", attackRoutes);
 app.use("/api/auth", require("./routes/authRoutes"));
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, "../../client")));
+
+// Default route to serve the login page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../client/login.html"));
+});
 
 const PORT = 3000;
 app.listen(PORT, () => {
