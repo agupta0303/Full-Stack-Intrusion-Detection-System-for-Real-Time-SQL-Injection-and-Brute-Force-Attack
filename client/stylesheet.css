@@ -79,7 +79,6 @@ body {
     padding: 30px;
     border-radius: 15px;
     box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
 }
 
 .dashboard-header {
@@ -197,4 +196,10 @@ table tbody tr:hover {
     color: #d93025;
     font-weight: bold;
     padding: 30px;
+}
+
+.chart-container{
+    width: 100%; 
+    max-width: 600px; 
+    margin: 20px auto;
 }
