@@ -2,7 +2,7 @@ const AttackLog = require("../models/AttackLog");
 
 const loginAttempts = {};
 
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 3;
 const WINDOW_MS = 60 * 1000;
 
 exports.login = async (req, res) => {

@@ -22,6 +22,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, "../../client")));
+app.use("/dashboard", express.static(path.join(__dirname, "../../frontend")));
 
 // Default route to serve the login page
 app.get("/", (req, res) => {
