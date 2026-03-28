@@ -8,9 +8,6 @@ function fetchLogs() {
         .then(data => {
             const tableBody = document.getElementById("logsBody");
             tableBody.innerHTML = ""; // Clear existing rows
-
-            // The API returns { safeQueriesProcessed: true, totalAttacks: N, attacks: [...] }
-            // Let's check for both structures in case we fetch from a regular log endpoint
             const logsArray = data.attacks ? data.attacks : (Array.isArray(data) ? data : []);
 
             if (logsArray.length === 0) {
@@ -30,7 +27,6 @@ function fetchLogs() {
 
                 const timeStr = new Date(log.timestamp).toLocaleString();
                 
-                // Styling classes based on severity
                 let severityClass = "severity-low";
                 if (log.severity === "High" || log.severity === "Critical") {
                     severityClass = "severity-high";
@@ -38,7 +34,6 @@ function fetchLogs() {
                     severityClass = "severity-medium";
                 }
 
-                // Confidence format
                 let confidence = log.confidenceScore * 100;
                 if (confidence > 100) confidence = 100;
 
@@ -53,7 +48,6 @@ function fetchLogs() {
 
                 tableBody.appendChild(tr);
 
-                // Count for chart
                 if (log.attackType.toLowerCase().includes("sql")) {
                     sqlCount++;
                 } else if (log.attackType.toLowerCase().includes("brute force")) {
@@ -99,7 +93,7 @@ function renderChart(sqlCount, bruteCount, otherCount) {
         backgroundColors.push("#ffcc00");
     }
 
-    if (data.length === 0) return; // Nothing to chart
+    if (data.length === 0) return; 
 
     attackChartInstance = new Chart(ctx, {
         type: 'doughnut',
