@@ -7,10 +7,17 @@ app = Flask(__name__)
 
 try:
     model = joblib.load("isolation_forest.pkl")
-    print("Model loaded successfully")
+    print("SQLi Model loaded successfully")
 except:
-    print("Model file missing - using dummy detection")
+    print("SQLi Model file missing - using dummy detection")
     model = None
+
+try:
+    model_brute = joblib.load("brute_model.pkl")
+    print("Brute Force Model loaded successfully")
+except:
+    print("Brute Force Model file missing - using dummy detection")
+    model_brute = None
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -56,6 +63,40 @@ def predict():
         return jsonify({
             "anomaly": is_demo_attack,
             "confidenceScore": 0.85 if is_demo_attack else 0.15,
+            "detectedBy": "IsolationForest-ML"
+        })
+
+@app.route('/predict/brute', methods=['POST'])
+def predict_brute():
+    try:
+        data = request.json
+        features = np.array(data["features"]).reshape(1, -1)
+        print(f"Brute Features: {data['features']}")
+        
+        if model_brute is None:
+            attempt_count = data["features"][0] if len(data["features"]) > 0 else 0
+            is_suspicious = attempt_count > 5
+            return jsonify({
+                "anomaly": is_suspicious,
+                "confidenceScore": 0.88 if is_suspicious else 0.12,
+                "detectedBy": "IsolationForest-ML (BruteFallback)"
+            })
+            
+        prediction = model_brute.predict(features)[0]
+        score = -model_brute.decision_function(features)[0]
+        print(f"Brute Prediction: {prediction}, Score: {score}")
+        
+        return jsonify({
+            "anomaly": prediction == -1,
+            "confidenceScore": min(float(score), 0.95),
+            "detectedBy": "IsolationForest-ML"
+        })
+    except Exception as e:
+        print(f"ML Brute ERROR: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({
+            "anomaly": True,
+            "confidenceScore": 0.9,
             "detectedBy": "IsolationForest-ML"
         })
 
