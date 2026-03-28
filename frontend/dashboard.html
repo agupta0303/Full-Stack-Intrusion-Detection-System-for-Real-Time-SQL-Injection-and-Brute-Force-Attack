@@ -18,25 +18,27 @@
             </div>
         </div>
 
-        <div class="table-container">
-            <table id="logsTable">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Attack Type</th>
-                        <th>Target/Payload</th>
-                        <th>Confidence</th>
-                        <th>Severity</th>
-                        <th>Detected By</th>
-                    </tr>
-                </thead>
-                <tbody id="logsBody">
-                </tbody>
-            </table>
-        </div>
+        <div class="dashboard-content">
+            <div class="table-container">
+                <table id="logsTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Attack Type</th>
+                            <th>Target/Payload</th>
+                            <th>Confidence</th>
+                            <th>Severity</th>
+                            <th>Detected By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsBody">
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="chart-container" style="width: 100%; max-width: 600px; margin: 20px auto;">
-            <canvas id="attackChart"></canvas>
+            <div class="chart-container">
+                <canvas id="attackChart"></canvas>
+            </div>
         </div>
         
         <div class="actions-footer">

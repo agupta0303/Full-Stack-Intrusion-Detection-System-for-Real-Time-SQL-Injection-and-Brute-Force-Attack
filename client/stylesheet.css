@@ -110,7 +110,17 @@ body {
     background: #16315c;
 }
 
+.dashboard-content {
+    display: flex;
+    flex-wrap: wrap-reverse;
+    gap: 30px;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
 .table-container {
+    flex: 1;
+    min-width: 400px;
     overflow-x: auto;
 }
 
@@ -200,6 +210,6 @@ table tbody tr:hover {
 
 .chart-container{
     width: 100%; 
-    max-width: 600px; 
-    margin: 20px auto;
+    max-width: 350px; 
+    margin: 0 auto;
 }
