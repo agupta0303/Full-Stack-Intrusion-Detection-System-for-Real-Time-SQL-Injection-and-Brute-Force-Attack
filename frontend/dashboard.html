@@ -7,9 +7,11 @@
     <link rel="stylesheet" href="../client/stylesheet.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body class="dashboard-body">
 
     <div class="dashboard-container">
+        
         <div class="dashboard-header">
             <h2>Intrusion Detection Logs</h2>
             <div class="nav-links">
@@ -18,8 +20,10 @@
             </div>
         </div>
 
-        <div class="dashboard-content">
-            <div class="table-container">
+        <div class="dashboard-content" 
+             style="display: flex; gap: 20px; align-items: flex-start;">
+
+            <div class="table-container" style="flex: 2; overflow-x: auto; max-height: 400px; overflow-y: auto;">
                 <table id="logsTable">
                     <thead>
                         <tr>
@@ -36,16 +40,19 @@
                 </table>
             </div>
 
-            <div class="chart-container">
-                <canvas id="attackChart"></canvas>
+            <div class="chart-container" style="flex: 1; position: sticky; top: 20px;">
+                <canvas id="attackChart" style="width: 100%; height: 300px;"></canvas>
             </div>
+
         </div>
         
         <div class="actions-footer">
             <button onclick="fetchLogs()" class="refresh-btn">Refresh Logs</button>
         </div>
+
     </div>
 
     <script src="dashboard.js"></script>
+
 </body>
 </html>
