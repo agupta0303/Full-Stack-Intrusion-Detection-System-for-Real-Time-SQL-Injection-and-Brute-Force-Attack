@@ -2,6 +2,12 @@ const { sqlRegexPatterns } = require("../utils/regexPatterns");
 const AttackLog = require("../models/AttackLog");
 const mlDetector = require("./mlDetector"); 
 
+const getSeverity = (score) => {
+  if (score >= 0.75) return "High";
+  if (score >= 0.40) return "Medium";
+  return "Low";
+};
+
 async function sqlDetector(req, res, next) {
   const payload = req.body?.input || req.body?.query || req.body?.sql || JSON.stringify(req.body);
   if (!payload) return next();
@@ -14,7 +20,7 @@ async function sqlDetector(req, res, next) {
       attackType: "SQL_INJECTION",
       payload: payload.substring(0, 500),
       confidenceScore: 0.48,
-      severity: "HIGH",
+      severity: getSeverity(0.48),
       detectedBy: "RULE-BASED"
     });
     return res.status(403).json({ result: "blocked", detectedBy: "RULE-BASED" });
@@ -30,7 +36,7 @@ async function sqlDetector(req, res, next) {
       attackType: "SQL_INJECTION",
       payload: payload.substring(0, 500),
       confidenceScore: mlScore,
-      severity: "HIGH",
+      severity: getSeverity(mlScore),
       detectedBy: "ML MODEL"
     });
     return res.status(403).json({ 
