@@ -39,13 +39,18 @@ def predict():
             })
         
         prediction = model.predict(features)[0]
-        score = -model.decision_function(features)[0]
+        # Score is higher (more negative) for anomalies.
+        raw_score = model.decision_function(features)[0]
         
-        print(f"Prediction: {prediction}, Score: {score}")
+        # Use a scaled sigmoid function to boundedly map negative scores (anomalies) toward 1.0
+        # raw_score < 0 indicates anomaly. So -raw_score > 0
+        confidence_percent = 1 / (1 + np.exp(raw_score * 5)) 
+
+        print(f"Prediction: {prediction}, Raw Score: {raw_score}, Confidence: {confidence_percent:.2f}")
         
         return jsonify({
-            "anomaly": prediction == -1,
-            "confidenceScore": min(float(score), 0.95),
+            "anomaly": bool(prediction == -1),
+            "confidenceScore": float(confidence_percent),
             "detectedBy": "IsolationForest-ML"
         })
         
@@ -83,12 +88,16 @@ def predict_brute():
             })
             
         prediction = model_brute.predict(features)[0]
-        score = -model_brute.decision_function(features)[0]
-        print(f"Brute Prediction: {prediction}, Score: {score}")
+        raw_score = model_brute.decision_function(features)[0]
+        
+        # Use a scaled sigmoid function to boundedly map negative scores (anomalies) toward 1.0
+        confidence_percent = 1 / (1 + np.exp(raw_score * 5))
+
+        print(f"Brute Prediction: {prediction}, Raw Score: {raw_score}, Confidence: {confidence_percent:.2f}")
         
         return jsonify({
-            "anomaly": prediction == -1,
-            "confidenceScore": min(float(score), 0.95),
+            "anomaly": bool(prediction == -1),
+            "confidenceScore": float(confidence_percent),
             "detectedBy": "IsolationForest-ML"
         })
     except Exception as e:
