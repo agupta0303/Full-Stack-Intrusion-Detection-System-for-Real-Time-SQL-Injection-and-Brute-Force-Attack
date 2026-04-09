@@ -2,12 +2,18 @@ const axios = require("axios");
 
 module.exports = async function mlDetector(payload = "") {
   try {
+    // Pre-processing: Neutralize inline comment obfuscation (e.g. U/**/NION)
+    const normalized = payload.replace(/\/\*[\s\S]*?\*\//g, '');
+    
     const features = [
-      payload.length,
-      (payload.match(/\s/g) || []).length,
-      (payload.match(/'/g) || []).length,
-      (payload.match(/\bOR\b/gi) || []).length,
-      (payload.match(/\bUNION\b/gi) || []).length,
+      payload.length, // Keep original length to capture bloat
+      (normalized.match(/\s/g) || []).length,
+      (normalized.match(/'/g) || []).length,
+      // Broadened to boolean logic operators
+      (normalized.match(/\b(?:OR|AND)\b/gi) || []).length,
+      // Broadened to major SQL execution tokens
+      (normalized.match(/\b(?:UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC)\b/gi) || []).length,
+      // Keep identifying comment markers
       (payload.match(/--|#|\/\*/g) || []).length
     ];
 

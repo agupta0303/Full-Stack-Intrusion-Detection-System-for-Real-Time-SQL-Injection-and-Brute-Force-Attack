@@ -14,13 +14,16 @@ async function sqlDetector(req, res, next) {
 
   console.log("Testing:", payload.substring(0, 40));
 
-  if (sqlRegexPatterns.some(regex => regex.test(payload))) {
+  // Strip inline comments to prevent regex bypasses
+  const normalizedPayload = payload.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  if (sqlRegexPatterns.some(regex => regex.test(normalizedPayload))) {
     console.log("RULE-BASED BLOCKED");
     await AttackLog.create({
       attackType: "SQL_INJECTION",
       payload: payload.substring(0, 500),
-      confidenceScore: 0.48,
-      severity: getSeverity(0.48),
+      confidenceScore: 0.85, // Give rule-based strikes high confidence
+      severity: getSeverity(0.85), 
       detectedBy: "RULE-BASED"
     });
     return res.status(403).json({ result: "blocked", detectedBy: "RULE-BASED" });
