@@ -1,7 +1,5 @@
 const AttackLog = require("../models/AttackLog");
-const Credentials = require("../models/credentials");
 const axios = require("axios");
-const bcrypt = require("bcrypt");
 
 const loginAttempts = {};
 
@@ -64,26 +62,10 @@ exports.login = async (req, res) => {
     });
   }
 
-  const user = await Credentials.findOne({ username });
-
-  if (!user) {
+  if (username !== "admin" || password !== "admin123") {
     await AttackLog.create({
       attackType: "Invalid Login",
-      payload: `Invalid username: ${username}`,
-      confidenceScore: 0.6,
-      severity: "Medium",
-      detectedBy: "Credential Check"
-    });
-
-    return res.status(401).json({ message: "Invalid Credentials" });
-  }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    await AttackLog.create({
-      attackType: "Invalid Login",
-      payload: `Wrong password for: ${username}`,
+      payload: `Invalid credentials for: ${username}`,
       confidenceScore: 0.6,
       severity: "Medium",
       detectedBy: "Credential Check"
