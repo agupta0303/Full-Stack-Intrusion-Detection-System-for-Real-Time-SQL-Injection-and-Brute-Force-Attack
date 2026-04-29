@@ -1,22 +1,19 @@
 module.exports = {
-  sqlRegexPatterns: [
-    // Tautologies and Blind boolean logic (e.g. OR 1=1, AND 'a'='a', OR 25=25)
-    /(?:\b(?:OR|AND)\b)\s+(?:['"]?)([^'"\s]+)(?:['"]?)\s*(?:=|LIKE|>|<|>=|<=)\s*(?:['"]?)\1(?:['"]?)/i,
-    // UNION SELECT bypasses
-    /\bUNION\b\s+(?:ALL\s+)?\bSELECT\b/i,
-    // Stacked queries launching DML/DDL commands
-    /;\s*(?:DECLARE|DROP|DELETE|INSERT|UPDATE|EXEC|ALTER|CREATE|TRUNCATE)\b/i,
-    // System and File execution commands (Out-of-band / RCE)
-    /\b(?:xp_cmdshell|load_file|sys_exec|sys_eval|sp_addextendedproc|sp_executesql)\b/i,
-    // Time-based Blind SQLi
-    /\b(?:WAITFOR\s+DELAY|SLEEP|PG_SLEEP|BENCHMARK)\b(?:\s*\(|\s+['"])/i,
-    // Error-based SQLi (extractvalue, updatexml)
-    /\b(?:EXTRACTVALUE|UPDATEXML|CAST|CONVERT)\s*\(/i,
-    // Schema enumeration
-    /\b(?:information_schema|mysql\.db|sqlite_master|pg_catalog|sysdatabases|sysobjects)\b/i,
-    // Heavy Hex/Base64 encoding which is non-standard for normal input
-    /\b0x[0-9a-fA-F]{10,}\b/i,
-    // Common inline comments after quotes (e.g. admin' --)
-    /['"]\s*(?:--|#|\/\*)/
+  sqlPatterns: [
+    // 🔥 HIGH RISK
+    { regex: /\bUNION\b\s+(?:ALL\s+)?\bSELECT\b/i, weight: 1.0 },
+    { regex: /\bSLEEP\s*\(/i, weight: 1.0 },
+    { regex: /\bWAITFOR\s+DELAY\b/i, weight: 1.0 },
+    { regex: /\bDROP\b/i, weight: 0.9 },
+    { regex: /\bDELETE\b/i, weight: 0.9 },
+
+    // ⚠️ MEDIUM RISK
+    { regex: /(?:\b(?:OR|AND)\b)\s+['"]?.+['"]?\s*=\s*['"]?.+['"]?/i, weight: 0.7 },
+    { regex: /;\s*(?:INSERT|UPDATE|EXEC|ALTER|CREATE)\b/i, weight: 0.7 },
+
+    // ⚪ LOW RISK
+    { regex: /\b0x[0-9a-fA-F]{10,}\b/i, weight: 0.5 },
+    { regex: /\b(?:information_schema|mysql\.db|sqlite_master)\b/i, weight: 0.5 },
+    { regex: /['"]\s*(?:--|#|\/\*)/, weight: 0.4 }
   ]
 };

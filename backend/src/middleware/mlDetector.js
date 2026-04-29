@@ -2,26 +2,31 @@ const axios = require("axios");
 
 module.exports = async function mlDetector(payload = "") {
   try {
-    // Pre-processing: Neutralize inline comment obfuscation (e.g. U/**/NION)
-    const normalized = payload.replace(/\/\*[\s\S]*?\*\//g, '');
-    
+    const normalized = payload.replace(/\/\*[\s\S]*?\*\//g, "");
+
     const features = [
-      payload.length, // Keep original length to capture bloat
+      payload.length,
       (normalized.match(/\s/g) || []).length,
-      (normalized.match(/'/g) || []).length,
-      // Broadened to boolean logic operators
-      (normalized.match(/\b(?:OR|AND)\b/gi) || []).length,
-      // Broadened to major SQL execution tokens
-      (normalized.match(/\b(?:UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC)\b/gi) || []).length,
-      // Keep identifying comment markers
-      (payload.match(/--|#|\/\*/g) || []).length
+      (normalized.match(/'/g) || []).length * 2,
+      (normalized.match(/\b(?:OR|AND)\b/gi) || []).length * 3,
+      (normalized.match(/\b(?:UNION|SELECT|DROP|INSERT|UPDATE|DELETE|EXEC|SLEEP)\b/gi) || []).length * 3,
+      (payload.match(/--|#|\/\*/g) || []).length * 4
     ];
 
-    const response = await axios.post("http://localhost:5000/predict", { features });
+    console.log("📤 ML Features:", features);
 
-    return response.data.confidenceScore ?? 0.1;
+    const response = await axios.post(
+      "http://localhost:5000/predict",
+      { features },
+      { timeout: 3000 }
+    );
+
+    console.log("📥 ML Response:", response.data);
+
+    return response.data.confidenceScore || 0.1;
+
   } catch (err) {
-    console.error("ML detector error:", err.message);
-    return 0.1; 
+    console.error("❌ ML Error:", err.message);
+    return 0.1; // fallback
   }
 };

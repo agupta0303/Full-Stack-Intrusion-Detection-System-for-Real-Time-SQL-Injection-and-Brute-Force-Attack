@@ -35,7 +35,7 @@ def extract_brute_features(row):
         len(row["username"]),
         1.0
     ]
-print("🔍 SQL Columns:", df_sql.columns)
+print("SQL Columns:", df_sql.columns)
 
 sql_features = []
 

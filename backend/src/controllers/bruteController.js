@@ -15,7 +15,6 @@ exports.login = async (req, res) => {
     loginAttempts[ip] = [];
   }
 
-  // sliding window
   loginAttempts[ip] = loginAttempts[ip].filter(
     (timestamp) => now - timestamp < WINDOW_MS
   );

@@ -1,57 +1,89 @@
-const { sqlRegexPatterns } = require("../utils/regexPatterns");
+const { sqlPatterns } = require("../utils/regexPatterns");
 const AttackLog = require("../models/AttackLog");
-const mlDetector = require("./mlDetector"); 
+const mlDetector = require("./mlDetector");
 
 const getSeverity = (score) => {
-  if (score >= 0.75) return "High";
-  if (score >= 0.40) return "Medium";
+  if (score >= 0.8) return "High";
+  if (score >= 0.5) return "Medium";
   return "Low";
 };
 
 async function sqlDetector(req, res, next) {
-  const payload = req.body?.input || req.body?.query || req.body?.sql || JSON.stringify(req.body);
-  if (!payload) return next();
+  try {
+    const payload =
+      req.body?.input ||
+      req.body?.query ||
+      req.body?.sql ||
+      JSON.stringify(req.body);
 
-  console.log("Testing:", payload.substring(0, 40));
+    if (!payload) return next();
 
-  // Strip inline comments to prevent regex bypasses
-  const normalizedPayload = payload.replace(/\/\*[\s\S]*?\*\//g, '');
+    console.log("🔍 Payload:", payload.substring(0, 80));
 
-  const isRuleBased = sqlRegexPatterns.some(regex => regex.test(normalizedPayload));
-  
-  console.log("ML Check...");
-  const mlScore = await mlDetector(payload);
-  console.log("ML Score:", mlScore);
-  
-  const isMlBased = mlScore > 0.25;
+    const normalizedPayload = payload.replace(/\/\*[\s\S]*?\*\//g, "");
 
-  if (isRuleBased || isMlBased) {
-    const finalScore = isRuleBased ? Math.max(0.85, mlScore) : mlScore;
-    
-    const detectionMethods = [];
-    if (isRuleBased) detectionMethods.push("RULE-BASED");
-    if (isMlBased) detectionMethods.push("ML MODEL");
-    const detectedByString = detectionMethods.join(" & ");
+    let maxWeight = 0;
 
-    console.log(`BLOCKED by: ${detectedByString} (Score: ${finalScore})`);
-
-    await AttackLog.create({
-      attackType: "SQL_INJECTION",
-      payload: payload.substring(0, 500),
-      confidenceScore: finalScore,
-      severity: getSeverity(finalScore), 
-      detectedBy: detectedByString
+    sqlPatterns.forEach(({ regex, weight }) => {
+      if (regex.test(normalizedPayload)) {
+        console.log("✅ Matched Pattern:", regex);
+        maxWeight = Math.max(maxWeight, weight);
+      }
     });
 
-    return res.status(403).json({ 
-      result: "blocked", 
-      detectedBy: detectedByString, 
-      confidenceScore: finalScore 
-    });
+    const ruleScore = maxWeight;
+    const isRuleBased = maxWeight > 0.9;
+
+    console.log("📊 Rule Score (Max Weight):", ruleScore);
+
+    const mlScore = await mlDetector(payload);
+    console.log("🤖 ML Score:", mlScore);
+
+    const isMlBased = mlScore > 0.3;
+
+    let finalScore = (0.7 * ruleScore) + (0.3 * mlScore);
+
+    if (isRuleBased && isMlBased) {
+      finalScore = Math.max(finalScore, 0.85);
+    }
+
+    const isAttack = isRuleBased || isMlBased;
+
+    if (isAttack) {
+      let detectedBy = "";
+
+      if (isRuleBased && isMlBased) {
+        detectedBy = "HYBRID (RULE + ML)";
+      } else if (isRuleBased) {
+        detectedBy = "ML-BASED";
+      } else {
+        detectedBy = "RULE-BASED";
+      }
+
+      console.log(`BLOCKED by: ${detectedBy} | Score: ${finalScore}`);
+
+      await AttackLog.create({
+        attackType: "SQL_INJECTION",
+        payload: payload.substring(0, 500),
+        confidenceScore: finalScore,
+        severity: getSeverity(finalScore),
+        detectedBy: detectedBy
+      });
+
+      return res.status(403).json({
+        result: "blocked",
+        detectedBy,
+        confidenceScore: finalScore
+      });
+    }
+
+    console.log("✅ SAFE");
+    next();
+
+  } catch (err) {
+    console.error("SQL Detector Error:", err);
+    next();
   }
-
-  console.log("SAFE");
-  next();
 }
 
 module.exports = sqlDetector;
